@@ -10,3 +10,6 @@ build/
 *.pyd
 *.egg-info/
 .env
+desk-packs/latest.json
+desk-packs/sol-latest.json
+desk-packs/eth-latest.json
