@@ -1,0 +1,67 @@
+{
+  "generated_at": "2026-09-24T18:00:00+00:00",
+  "source": "dexscreener-cli",
+  "sleeve_hint": "BOTH",
+  "candidates": [
+    {
+      "chain": "solana",
+      "ticker": "WIF",
+      "token_address": "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
+      "pair_address": "example-pair-wif",
+      "vol_signal": "vol24=$1.2M liq=$340K",
+      "mark": 1.25,
+      "entry": 1.240625,
+      "invalidation": 1.1972031,
+      "hint": "CLEAN",
+      "score": 78
+    },
+    {
+      "chain": "solana",
+      "ticker": "BONK",
+      "token_address": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+      "pair_address": "example-pair-bonk",
+      "vol_signal": "vol24=$4.8M liq=$1.1M",
+      "mark": 0.00002145,
+      "entry": 0.00002134275,
+      "invalidation": 0.000020595754,
+      "hint": "CLEAN",
+      "score": 81
+    },
+    {
+      "chain": "ethereum",
+      "ticker": "PEPE",
+      "token_address": "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
+      "pair_address": "example-pair-pepe",
+      "vol_signal": "vol24=$2.4M liq=$900K",
+      "mark": 0.00000981,
+      "entry": 0.0000097119,
+      "invalidation": 0.0000093719835,
+      "hint": "CLEAN",
+      "score": 70
+    },
+    {
+      "chain": "base",
+      "ticker": "DEGEN",
+      "token_address": "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed",
+      "pair_address": "example-pair-degen",
+      "vol_signal": "vol24=$620K liq=$180K",
+      "mark": 0.0042,
+      "entry": 0.0041685,
+      "invalidation": 0.0040226025,
+      "hint": "FILLABLE-NOW",
+      "score": 52
+    },
+    {
+      "chain": "ethereum",
+      "ticker": "MOG",
+      "token_address": "0xaaeE1A9723aaDB7afA2810263653A34bA2C21C7a",
+      "pair_address": "example-pair-mog",
+      "vol_signal": "vol24=$95K liq=$62K",
+      "mark": 0.00000172,
+      "entry": 0.0000017114,
+      "invalidation": 0.000001651501,
+      "hint": "LIQUID",
+      "score": 44
+    }
+  ]
+}

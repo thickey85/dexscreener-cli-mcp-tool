@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Repo-local launcher so `./ds desk-pack ...` works from cron without activating the venv.
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -x "$ROOT/.venv/bin/python" ]]; then
+  PY="$ROOT/.venv/bin/python"
+else
+  PY="${PYTHON:-python3}"
+fi
+export PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}"
+exec "$PY" -m dexscreener_cli.cli "$@"

@@ -87,6 +87,7 @@ That's it. The setup wizard saves your choices and auto-loads them on every scan
 | Command | What it does |
 |---------|-------------|
 | `ds hot` | Scan hot tokens across your configured chains |
+| `ds desk-pack` | Write a ranked day-trader JSON shortlist for cron (see [Trading desk pack](#trading-desk-pack)) |
 | `ds search <query>` | Search tokens by name, symbol, or address |
 | `ds top-new` | Top new tokens by 24h volume |
 | `ds new-runners` | Fresh token runners with momentum scoring |
@@ -189,6 +190,75 @@ Add `--json` to any scan command for machine-readable JSON output.
 ```bash
 ds hot --json
 ds search pepe --json
+```
+
+---
+
+## Trading desk pack
+
+Scheduled shortlist for a trading desk. One hot scan writes ranked JSON an analyst or a cron agent can open directly. This is for cron and scheduled jobs. It is not meant to be called as a chatty MCP discovery loop on every turn.
+
+The command reuses the existing hot scanner (`HotScanner.scan`). It does not load saved presets, so a schedule stays on the desk book instead of whatever `ds setup` last saved. Holder lookups are skipped.
+
+```bash
+./ds desk-pack --chains solana,ethereum,base --limit 8
+```
+
+After `pip install -e .`, `ds desk-pack` is the same command. `./ds` is a repo-local launcher that prefers `.venv` when it exists.
+
+| Flag | Default | Role |
+|------|---------|------|
+| `--chains` | `solana,ethereum,base` | Chains to scan. Solana is the SOL sleeve. Ethereum and Base share the ETH sleeve. |
+| `--limit` | `8` | Shortlist length, from 2 to 10 |
+| `--out` | `desk-packs/latest.json` | Combined pack path |
+| `--json` | off | Also print the combined pack on stdout |
+
+A full run writes three files that share one `generated_at`:
+
+- `desk-packs/latest.json` — combined book (`sleeve_hint` is `SOL`, `ETH`, or `BOTH`)
+- `desk-packs/sol-latest.json` — Solana names from that same shortlist
+- `desk-packs/eth-latest.json` — Ethereum and Base names from that same shortlist
+
+Sleeve files land in the same directory as `--out`, and only when that sleeve's chains were requested. An empty sleeve is still written, so a quiet hour replaces a stale file. A thin tape can return fewer than 2 names; the files are still written. `desk-packs/example.json` is a checked-in sample of the shape, with illustrative levels rather than a live quote.
+
+Names have to be day-trader fillable before they land in the pack: at least about $50k liquidity, $80k 24h volume, 20 transactions in the last hour, two-sided flow, and 24h volume/liquidity at most 40. Stablecoins and gas tokens (SOL, ETH, USDC, and similar) are dropped. `NOT_FILLABLE` names are left out. The hints that remain:
+
+| Hint | Meaning |
+|------|---------|
+| `CLEAN` | Liquid two-sided tape, no thin-exit / one-way / blowoff flags, score at least 60 |
+| `FILLABLE-NOW` | Active 1h tape and enough depth to work size now |
+| `LIQUID` | Clears the book gate; quieter tape |
+| `NOT_FILLABLE` | Fails the gate. Omitted from the pack |
+
+### Levels
+
+`mark` is the pair's last USD price (`priceUsd`). Entry is a reclaim just under that mark. Invalidation sits 3.5% under entry (the middle of a 3–4% day-trader stop).
+
+| 1h price change | Reclaim below mark | Entry |
+|-----------------|--------------------|-------|
+| >= +12% | 1.00% | `mark * 0.990` |
+| <= 0% | 0.50% | `mark * 0.995` |
+| otherwise | 0.75% | `mark * 0.9925` |
+
+```
+invalidation = entry * 0.965
+```
+
+Worked example, mark = 1.00 and 1h = +4% (default 0.75% reclaim):
+
+```
+entry = 0.9925
+invalidation = 0.9925 * 0.965 = 0.9577625
+```
+
+`vol_signal` is a one-line book snapshot, for example `vol24=$1.2M liq=$340K`. `score` is the existing 0–100 hotness score, rounded to an integer.
+
+### Cron
+
+Every 20 minutes during a UTC desk window (13:00–21:00, about US morning through afternoon). Shift the hours to your session. 15–30 minutes is the intended cadence.
+
+```cron
+*/20 13-21 * * 1-5 cd /path/to/dexscreener-cli-mcp-tool && ./ds desk-pack --chains solana,ethereum,base --limit 8
 ```
 
 ---
@@ -612,6 +682,7 @@ pip install -e .
 ```
 dexscreener_cli/
   cli.py          - All CLI commands (Typer)
+  desk_pack.py    - Trading-desk JSON shortlist (ds desk-pack)
   ui.py           - Terminal rendering (Rich)
   scanner.py      - Token discovery and scanning
   scoring.py      - 8-component scoring engine

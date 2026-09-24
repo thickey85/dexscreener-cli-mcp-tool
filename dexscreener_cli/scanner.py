@@ -454,7 +454,7 @@ class HotScanner:
             return False
         return True
 
-    async def scan(self, filters: ScanFilters) -> list[HotTokenCandidate]:
+    async def scan(self, filters: ScanFilters, *, include_holders: bool = True) -> list[HotTokenCandidate]:
         seeds = await self._collect_seeds(filters.chains)
         # Keep fast-endpoint pressure bounded for watch mode.
         target = min(max(filters.limit * 4, 12), 72)
@@ -558,7 +558,8 @@ class HotScanner:
             reverse=True,
         )
         top = ranked[: filters.limit]
-        await hydrate_pair_holders([candidate.pair for candidate in top], max_pairs=filters.limit)
+        if include_holders:
+            await hydrate_pair_holders([candidate.pair for candidate in top], max_pairs=filters.limit)
         return top
 
     async def inspect_token(self, chain_id: str, token_address: str) -> list[PairSnapshot]:

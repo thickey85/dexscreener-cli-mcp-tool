@@ -25,6 +25,7 @@ from rich.text import Text
 from .alerts import send_alerts, send_test_alert
 from .client import DexScreenerClient
 from .config import DEFAULT_CHAINS, ScanFilters
+from .desk_pack import build_desk_run, dumps_pack, scan_desk_candidates, write_desk_run
 from .holders import hydrate_pair_holders, hydrate_token_rows_with_holders
 from .models import HotTokenCandidate, PairSnapshot
 from .scanner import HotScanner
@@ -1231,6 +1232,33 @@ def hot(
         typer.echo(json.dumps([_candidate_json(c) for c in candidates], indent=2, ensure_ascii=True))
         return
     _render_scan_board(candidates, filters)
+
+
+@app.command("desk-pack")
+def desk_pack(
+    chains: Annotated[str, typer.Option(help="Comma-separated chain IDs")] = "solana,ethereum,base",
+    limit: Annotated[int, typer.Option(help="Shortlist length (2-10)")] = 8,
+    out: Annotated[str, typer.Option("--out", help="Combined pack JSON path")] = "desk-packs/latest.json",
+    as_json: Annotated[bool, typer.Option("--json", help="Also print the combined pack to stdout")] = False,
+) -> None:
+    """Write a ranked day-trader JSON shortlist (cron/scheduled scans)."""
+    if limit < 2 or limit > 10:
+        typer.echo("desk-pack: --limit must be between 2 and 10", err=True)
+        raise typer.Exit(code=1)
+    selected = _parse_chains(chains)
+    candidates = asyncio.run(scan_desk_candidates(selected, limit))
+    run = build_desk_run(candidates, chains=selected, limit=limit)
+    paths = write_desk_run(run, Path(out))
+    if as_json:
+        typer.echo(dumps_pack(run.combined), nl=False)
+        return
+    console.print(
+        f"[green]Wrote {len(run.combined['candidates'])} names to {paths.combined}[/green]"
+    )
+    if paths.sol is not None and run.sol is not None:
+        console.print(f"  SOL sleeve: {len(run.sol['candidates'])} -> {paths.sol}")
+    if paths.eth is not None and run.eth is not None:
+        console.print(f"  ETH sleeve: {len(run.eth['candidates'])} -> {paths.eth}")
 
 
 @app.command("ai-top")
